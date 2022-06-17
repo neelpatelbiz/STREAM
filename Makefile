@@ -14,6 +14,12 @@ stream_f.exe: stream.f mysecond.o
 stream_c.exe: stream.c
 	$(CC) $(CFLAGS) stream.c -o stream_c.exe
 
+stream_default: stream.c
+	$(CC) -DDEFAULT stream.c -o stream_default
+
+stream_mmap: stream.c
+	$(CC) -DMMAP stream.c -o stream_mmap
+
 clean:
 	rm -f stream_f.exe stream_c.exe *.o
 

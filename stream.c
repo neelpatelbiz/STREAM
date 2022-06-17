@@ -47,6 +47,12 @@
 # include <limits.h>
 # include <sys/time.h>
 
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdlib.h>
+
 /*-----------------------------------------------------------------------
  * INSTRUCTIONS:
  *
@@ -176,9 +182,17 @@
 #define STREAM_TYPE double
 #endif
 
+#ifdef DEFAULT
 static STREAM_TYPE	a[STREAM_ARRAY_SIZE+OFFSET],
 			b[STREAM_ARRAY_SIZE+OFFSET],
 			c[STREAM_ARRAY_SIZE+OFFSET];
+#endif
+
+#ifdef MMAP
+static STREAM_TYPE	*a,
+			*b,
+			*c;
+#endif
 
 static double	avgtime[4] = {0}, maxtime[4] = {0},
 		mintime[4] = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
@@ -214,6 +228,16 @@ main()
     STREAM_TYPE		scalar;
     double		t, times[4][NTIMES];
 
+#ifdef MMAP
+    /* --- SETUP --- Allocate array on persistent memory using character device --- */
+	int map_fd = open("/dev/scullc", O_RDWR);
+	if (map_fd < 0){
+		exit(-1);
+	}
+	STREAM_TYPE *a = mmap( NULL, sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE+OFFSET, PROT_READ|PROT_WRITE, MAP_SHARED, map_fd, OFFSET);
+	STREAM_TYPE *b = mmap( NULL, sizeof(STREAM_TYPE) *STREAM_ARRAY_SIZE+OFFSET, PROT_READ|PROT_WRITE, MAP_SHARED, map_fd, OFFSET);
+	STREAM_TYPE *c = mmap( NULL, sizeof(STREAM_TYPE) *STREAM_ARRAY_SIZE+OFFSET, PROT_READ|PROT_WRITE, MAP_SHARED, map_fd, OFFSET);
+#endif
     /* --- SETUP --- determine precision and check timing --- */
 
     printf(HLINE);
